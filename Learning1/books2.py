@@ -1,4 +1,5 @@
 from fastapi import Body, FastAPI
+from pydantic import BaseModel, Field
 
 app = FastAPI()
 
@@ -26,6 +27,14 @@ BOOKS = [
     Book(5, 'Title Five', 'Charles', 'math', 'A detailed analysis of advanced mathematical theories.', 4.8),
 ]
 
+class BookModel(BaseModel):
+    id: int
+    title: str = Field(min_length=5, max_length=8)
+    author: str
+    category: str
+    description: str = Field(min_length=10, max_length=50)
+    rating: float = Field(gt=-1, lt=5)
+
 
 @app.get("/books")
 async def get_books():
@@ -34,3 +43,18 @@ async def get_books():
 @app.post("/books/create_book")
 async def create_book(new_book=Body()):
     BOOKS.append(new_book)
+    return {"message": "Book added successfully", "book": new_book}
+
+@app.put("/books/update_book")
+async def update_book(book_author: str = Body(), rating: float = Body()):
+     for book in BOOKS:
+          if book.author.casefold() == book_author.casefold():
+                book.rating = rating
+                return {"message": "Book rating updated successfully", "book": book}
+
+@app.post("/books/create_a_book")
+async def create_a_book(new_book: BookModel):
+     modify_book=Book(**new_book.model_dump())
+     BOOKS.append(modify_book)
+     print(type(modify_book))
+     return {"message": "Book added successfully", "book": new_book}
