@@ -1,5 +1,6 @@
 from fastapi import Body, FastAPI
 from pydantic import BaseModel, Field
+from typing import Optional4
 
 app = FastAPI()
 
@@ -28,7 +29,7 @@ BOOKS = [
 ]
 
 class BookModel(BaseModel):
-    id: int
+    id: Optional[int]= None
     title: str = Field(min_length=5, max_length=8)
     author: str
     category: str
@@ -55,6 +56,12 @@ async def update_book(book_author: str = Body(), rating: float = Body()):
 @app.post("/books/create_a_book")
 async def create_a_book(new_book: BookModel):
      modify_book=Book(**new_book.model_dump())
-     BOOKS.append(modify_book)
-     print(type(modify_book))
-     return {"message": "Book added successfully", "book": new_book}
+     BOOKS.append(unique_book_id(modify_book))
+
+
+def unique_book_id(book: Book):
+    if len(BOOKS)>0:
+         book.id=BOOKS[-1].id + 1
+    else:
+         book.id = 1
+    return book
